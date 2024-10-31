@@ -138,7 +138,7 @@ class ControlNet(nn.Module):
         self.input_blocks = nn.ModuleList(
             [
                 TimestepEmbedSequential(
-                    conv_nd(dims, in_channels, model_channels, 3, padding=1)
+                    conv_nd(dims, 324, model_channels, 3, padding=1)
                 )
             ]
         )
@@ -311,7 +311,9 @@ class ControlNet(nn.Module):
         outs = []
 
         h = x.type(self.dtype)
+        # print(h.shape, example_pair_hint.shape)
         h = torch.cat((h, example_pair_hint), dim=1)
+        
         # "****************concat example_image_hint with context and pass through as usual after changing dimention of first module of input_blocks. rest dimentions and architechture remains the same. also h is added only to quer_hint, not guided hint"
         for module, zero_conv in zip(self.input_blocks, self.zero_convs):
             if query_hint is not None:
