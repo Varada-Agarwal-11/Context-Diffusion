@@ -57,7 +57,8 @@ def disabled_train(self, mode=True):
 
 class FrozenT5Embedder(AbstractEncoder):
     """Uses the T5 transformer encoder for text"""
-    def __init__(self, version="google/t5-v1_1-large", device="cuda", max_length=77, freeze=True):  # others are google/t5-v1_1-xl and google/t5-v1_1-xxl
+    # 
+    def __init__(self, version="google/t5-v1_1-large",device="cuda", max_length=77, freeze=True):  # others are google/t5-v1_1-xl and google/t5-v1_1-xxl
         super().__init__()
         self.tokenizer = T5Tokenizer.from_pretrained(version)
         self.transformer = T5EncoderModel.from_pretrained(version)
@@ -92,6 +93,7 @@ class FrozenCLIPEmbedder(AbstractEncoder):
         "pooled",
         "hidden"
     ]
+    # device="cuda"
     def __init__(self, version="openai/clip-vit-large-patch14", device="cuda", max_length=77,
                  freeze=True, layer="last", layer_idx=None):  # clip-vit-base-patch32
         super().__init__()
@@ -118,6 +120,7 @@ class FrozenCLIPEmbedder(AbstractEncoder):
         batch_encoding = self.tokenizer(text, truncation=True, max_length=self.max_length, return_length=True,
                                         return_overflowing_tokens=False, padding="max_length", return_tensors="pt")
         tokens = batch_encoding["input_ids"].to(self.device)
+        # tokens = batch_encoding["input_ids"]
         outputs = self.transformer(input_ids=tokens, output_hidden_states=self.layer=="hidden")
         if self.layer == "last":
             z = outputs.last_hidden_state
@@ -140,11 +143,12 @@ class FrozenOpenCLIPEmbedder(AbstractEncoder):
         "last",
         "penultimate"
     ]
+     # device="cuda",
     def __init__(self, arch="ViT-H-14", version="laion2b_s32b_b79k", device="cuda", max_length=77,
                  freeze=True, layer="last"):
         super().__init__()
         assert layer in self.LAYERS
-        model, _, _ = open_clip.create_model_and_transforms(arch, device=torch.device('cpu'), pretrained=version)
+        model, _, _ = open_clip.create_model_and_transforms(arch, device=torch.device('cuda'), pretrained=version)
         del model.visual
         self.model = model
 
@@ -194,6 +198,7 @@ class FrozenOpenCLIPEmbedder(AbstractEncoder):
 
 
 class FrozenCLIPT5Encoder(AbstractEncoder):
+    # device="cuda"
     def __init__(self, clip_version="openai/clip-vit-large-patch14", t5_version="google/t5-v1_1-xl", device="cuda",
                  clip_max_length=77, t5_max_length=77):
         super().__init__()
@@ -209,5 +214,3 @@ class FrozenCLIPT5Encoder(AbstractEncoder):
         clip_z = self.clip_encoder.encode(text)
         t5_z = self.t5_encoder.encode(text)
         return [clip_z, t5_z]
-
-
